@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import {
   Paper,
@@ -18,6 +18,7 @@ import {
   Box,
   IconButton,
   CircularProgress,
+  TablePagination,
 } from "@mui/material";
 import {
   LineChart,
@@ -41,7 +42,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import CloseIcon from "@mui/icons-material/Close";
-
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+const API_URL = "http://localhost:8000/data"; // Update with your FastAPI endpoint
 const DataExplorer = () => {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -50,39 +53,84 @@ const DataExplorer = () => {
   const [chartType, setChartType] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [expanded, setExpanded] = useState(false);
   const chartTypes = ["Line", "Bar", "Area", "Scatter", "Radar", "Pie"];
 
-  // Handle file upload
-  const handleFileUpload = (event) => {
-    setLoading(true);
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const binaryStr = e.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const parsedData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  // // Handle file upload
+  // const handleFileUpload = (event) => {
+  //   setLoading(true);
+  //   const file = event.target.files[0];
+  //   if (!file) return;
+  //   const reader = new FileReader();
+  //   reader.onload = (e) => {
+  //     const binaryStr = e.target.result;
+  //     const workbook = XLSX.read(binaryStr, { type: "binary" });
+  //     const sheetName = workbook.SheetNames[0];
+  //     const sheet = workbook.Sheets[sheetName];
+  //     const parsedData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-      if (parsedData.length > 0) {
-        setColumns(parsedData[0]);
-        setData(
-          parsedData
-            .slice(1)
-            .map((row) =>
-              Object.fromEntries(
-                parsedData[0].map((col, index) => [col, row[index]])
-              )
-            )
-        );
+  //     if (parsedData.length > 0) {
+  //       setColumns(parsedData[0]);
+  //       setData(
+  //         parsedData
+  //           .slice(1)
+  //           .map((row) =>
+  //             Object.fromEntries(
+  //               parsedData[0].map((col, index) => [col, row[index]])
+  //             )
+  //           )
+  //       );
+  //     }
+  //     setLoading(false);
+  //   };
+  //   reader.readAsBinaryString(file);
+  // };
+
+  // // Function to format timestamp as 'YYYY-MM-DD'
+  // const formatDate = (value) => {
+  //   if (!value) return value;
+
+  //   // Handle Excel serial numbers (numeric timestamps)
+  //   if (!isNaN(value) && value > 10000) {
+  //     const excelEpoch = new Date(1899, 11, 30); // Excel's base date
+  //     const date = new Date(excelEpoch.getTime() + value * 86400000);
+  //     return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+  //   }
+
+  //   // If it's already a date string, return it as is
+  //   const parsedDate = Date.parse(value);
+  //   if (!isNaN(parsedDate)) {
+  //     return new Date(parsedDate).toISOString().split("T")[0]; // Ensure consistency
+  //   }
+
+  //   return value; // Return as is if not a date
+  // };
+
+  // Fetch data from FastAPI
+  const fetchDataFromAPI = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(API_URL);
+      const result = await response.json();
+
+      if (Array.isArray(result) && result.length > 0) {
+        const columnNames = Object.keys(result[0]);
+        setColumns(columnNames);
+        setData(result);
+      } else {
+        console.error("Invalid data format");
       }
-      setLoading(false);
-    };
-    reader.readAsBinaryString(file);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+    setLoading(false);
   };
 
+  useEffect(() => {
+    fetchDataFromAPI();
+  }, []);
   // Check if all selections are made
   const handleShowGraph = () => {
     if (xAxis && yAxis && chartType) {
@@ -92,6 +140,16 @@ const DataExplorer = () => {
         "Please select X-Axis, Y-Axis, and Chart Type before viewing the graph."
       );
     }
+  };
+  // Handle page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
@@ -104,7 +162,7 @@ const DataExplorer = () => {
         width: "90%",
       }}
     >
-      {/* File Upload */}
+      {/* File Upload
       <Button variant="contained" component="label" sx={{ marginBottom: 3 }}>
         Upload CSV / Excel
         <input
@@ -113,6 +171,15 @@ const DataExplorer = () => {
           accept=".csv, .xlsx, .xls"
           onChange={handleFileUpload}
         />
+      </Button> */}
+
+      {/* Fetch Data Button */}
+      <Button
+        variant="contained"
+        onClick={fetchDataFromAPI}
+        sx={{ marginBottom: 2 }}
+      >
+        Fetch Data
       </Button>
 
       {/* Loading Indicator */}
@@ -161,37 +228,99 @@ const DataExplorer = () => {
           View Graph
         </Button>
       </Box>
-
-      {/* Table Display */}
-      {data.length > 0 && !loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-          <TableContainer
-            component={Paper}
-            sx={{ maxHeight: 300, overflowY: "auto", width: "80%" }}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  {columns.map((col, index) => (
-                    <TableCell key={index} sx={{ fontWeight: "bold" }}>
-                      {col}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {data.slice(0, 10).map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {columns.map((col, colIndex) => (
-                      <TableCell key={colIndex}>{row[col]}</TableCell>
+      {/* Expand/Collapse Button */}
+      <IconButton onClick={() => setExpanded(!expanded)}>
+        {expanded ? (
+          <ExpandLessIcon fontSize="large" />
+        ) : (
+          <ExpandMoreIcon fontSize="large" />
+        )}
+      </IconButton>
+      {/* Table */}
+      <Paper
+        sx={{
+          width: expanded ? "100vw" : "600px",
+          maxWidth: "95vw", // Prevents touching edges
+          margin: "auto", // Ensures equal space on both sides
+          height: expanded ? "80vh" : "auto",
+          overflow: "hidden",
+          padding: "16px", // Added padding
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Soft shadow
+          border: "1px solid #ccc",
+          transition: "all 0.3s ease-in-out",
+        }}
+      >
+        {/* Table Heading */}
+        <Typography
+          variant="h5"
+          sx={{
+            textAlign: "center",
+            fontWeight: "bold",
+            marginBottom: 2,
+          }}
+        >
+          Uploaded Data Table
+        </Typography>
+        {data.length > 0 ? (
+          <>
+            <TableContainer sx={{ maxHeight: expanded ? "70vh" : "auto" }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column, index) => (
+                      <TableCell
+                        key={index}
+                        sx={{
+                          fontWeight: "bold",
+                          background: "#2a5353",
+                          color: "white",
+                          border: "1px solid black",
+                        }}
+                      >
+                        {column}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )}
+                </TableHead>
+                <TableBody>
+                  {data
+                    .slice(
+                      page * rowsPerPage,
+                      expanded ? data.length : (page + 1) * rowsPerPage
+                    )
+                    .map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>
+                        {columns.map((col, colIndex) => (
+                          <TableCell key={colIndex}>{row[col]}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Pagination */}
+            {!expanded && (
+              <TablePagination
+                component="div"
+                rowsPerPageOptions={[10, 20, 50]}
+                count={data.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={(_, newPage) => setPage(newPage)}
+                onRowsPerPageChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value, 10));
+                  setPage(0);
+                }}
+              />
+            )}
+          </>
+        ) : (
+          <Typography variant="h6" color="textSecondary" align="center">
+            No data available.
+          </Typography>
+        )}
+      </Paper>
 
       {/* Modal for Graph */}
       <Modal open={openModal} onClose={() => setOpenModal(false)}>

@@ -94,6 +94,30 @@ const ModelPerformance = () => {
   const [selectedMetricTab, setSelectedMetricTab] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pendingDialog, setPendingDialog] = useState(null); // Tracks which dialog to open after drawer
+  const [modelsData, setModelsData] = useState([]); // State for API data
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
+
+  // Fetch API data inside useEffect
+  // useEffect(() => {
+  //   const dummyData = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const response = await fetch("https://api.example.com/models"); // Replace with actual API URL
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! Status: ${response.status}`);
+  //       }
+  //       const data = await response.json();
+  //       setModelsData(data); // Update state with API data
+  //     } catch (error) {
+  //       setError(error.message); // Set error state
+  //     } finally {
+  //       setLoading(false); // Stop loading
+  //     }
+  //   };
+
+  //   fetchModels();
+  // }, []);
 
   const bestModel = dummyData.reduce((prev, curr) =>
     curr.R2 > prev.R2 ? curr : prev
@@ -498,7 +522,6 @@ const ModelPerformance = () => {
             </>
           )}
 
-          {/* Step 4: Model Breakdown - Progress Bars */}
           {/* Step 4: Model Breakdown - Progress Bars */}
           {openDialog === 4 && (
             <>

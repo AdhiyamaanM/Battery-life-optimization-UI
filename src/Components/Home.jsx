@@ -9,13 +9,17 @@ import {
 } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { motion } from "framer-motion"; // Animation library
+import { motion, AnimatePresence, color } from "framer-motion"; // Animation library
 import CloseIcon from "@mui/icons-material/Close";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Collapse } from "@mui/material";
 import HomeBackground from "../Assets/Background Images/HomeBackground.webp";
+import SectionTwo from "../Assets/Background Images/SectionTwo.jpg";
+import SectionThree from "../Assets/Background Images/SectionThree.jpg";
+import SectionOne from "../Assets/Background Images/SectionOne.jpg";
+import Section from "../Assets/Background Images/Section.webp";
 import {
   EvStation as EvStationIcon,
   Speed as SpeedIcon,
@@ -227,7 +231,7 @@ function DataCard({ title, description, icon, onClick, open }) {
           p: 2,
           background: "rgba(255, 255, 255, 0.1)", // Glassmorphism background
           backdropFilter: "blur(10px)", // Blurring background
-          color: "#333",
+          color: "wheat",
           transition: "transform 0.4s ease, box-shadow 0.4s ease",
           cursor: "pointer",
           boxShadow: open
@@ -252,7 +256,7 @@ function DataCard({ title, description, icon, onClick, open }) {
 
         {/* Expandable content */}
         <Collapse in={open} timeout="auto" unmountOnExit>
-          <Typography variant="body1" sx={{ mt: 2, color: "#666" }}>
+          <Typography variant="body1" sx={{ mt: 2, color: "wheat" }}>
             {description}
           </Typography>
         </Collapse>
@@ -294,7 +298,17 @@ export default function Home() {
   const [bubbleStart, setBubbleStart] = useState(false);
   const [offsetY, setOffsetY] = useState(0);
   const [scrollIndex, setScrollIndex] = useState(0);
-
+  const [selectedMetric, setSelectedMetric] = useState(null);
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [scrollY, setScrollY] = useState(0);
+  // Handle Scroll for Parallax Effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   useEffect(() => {
     const handleScroll = () => setOffsetY(window.scrollY * 0.5); // Adjust speed here
     window.addEventListener("scroll", handleScroll);
@@ -305,6 +319,8 @@ export default function Home() {
     setExpandedCard(expandedCard === card ? null : card); // Toggle expand/collapse
     setSelectedData(card); // Set data to show in the expanded state
   };
+
+  const modalOffset = { x: -80, y: -30 }; // Adjust these values to move the modal
 
   const aiModels = [
     {
@@ -395,7 +411,23 @@ export default function Home() {
       bestFor: "Powering the Future with Intelligent Battery Management.",
     },
   ];
-
+  const metrics = [
+    {
+      title: "Mean Squared Error (MSE)",
+      description:
+        "Measures the average squared difference between actual and predicted values.",
+    },
+    {
+      title: "Mean Absolute Error (MAE)",
+      description:
+        "Calculates the average absolute difference between actual and predicted values.",
+    },
+    {
+      title: "R² Score",
+      description:
+        "Indicates how well the model explains the variance in the data (closer to 1 is better).",
+    },
+  ];
   const handleExpandClick = (index) => {
     setExpanded((prev) => ({ ...prev, [index]: !prev[index] }));
   };
@@ -404,203 +436,316 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleMouseEnter = (event, metric) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setModalPosition({ x: rect.left + rect.width / 2, y: rect.top });
+    setSelectedMetric(metric);
+  };
+
+  const handleClose = () => setSelectedMetric(null);
   return (
     <>
       <Box sx={{ position: "relative", overflow: "hidden" }}>
-        {/* Animated Background */}
-        <motion.div
-          initial={{ scale: 1 }}
-          animate={{ scale: 1.1 }}
-          transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "40vh",
-            backgroundImage: `url(${HomeBackground})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            zIndex: -1,
-            filter: "brightness(0.6)",
-          }}
-        />
+        {/* Parallax Background */}
 
         {/* Overlay Text */}
+
+        {/* 🔥 Section 1: Home */}
         <Box
           sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
+            position: "relative",
             width: "100%",
-            height: "40vh",
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
+            minHeight: "100vh",
+            backgroundImage: `url(${Section})`,
+            backgroundSize: "cover",
+            backgroundAttachment: "fixed",
+            backgroundPosition: "center",
           }}
         >
-          <Typography variant="h3" sx={{ color: "#fff", fontWeight: 700 }}>
-            ⚡ EV Battery Optimization
-          </Typography>
-        </Box>
-
-        {/* Carousel */}
-        <Box
-          sx={{ padding: "20px", maxWidth: "90%", margin: "auto", mt: "200px" }}
-        >
-          <Swiper
-            slidesPerView={4}
-            spaceBetween={20}
-            navigation={true}
-            pagination={{ clickable: true }}
-            autoplay={{ delay: 3000, disableOnInteraction: false }}
-            modules={[Navigation, Pagination, Autoplay]}
-            onSwiper={(swiper) => (swiperRef.current = swiper)}
-            style={{ paddingBottom: "60px" }}
+          <Box
+            sx={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "rgba(0, 0, 0, 0.5)",
+              zIndex: 1,
+            }}
+          />
+          <Box
+            sx={{
+              position: "relative",
+              zIndex: 2,
+              color: "wheat",
+              textAlign: "center",
+              p: 4,
+            }}
           >
-            {dataPoints.map((item, index) => (
-              <SwiperSlide key={index}>
-                <DataCard
-                  {...item}
-                  onClick={() => handleCardClick(item)}
-                  open={expandedCard === item}
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </Box>
-        {/* AI Model Cards Section */}
-        <Box sx={{ textAlign: "center", mt: 6 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-            AI Models for Analysis & Training
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Explore various AI models used for data analysis, prediction, and
-            optimization.
-          </Typography>
-        </Box>
-
-        <Grid
-          container
-          spacing={4}
-          sx={{ padding: "40px", maxWidth: "90%", margin: "auto" }}
-        >
-          {aiModels.map((model, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card sx={{ maxWidth: 345, borderRadius: "12px", boxShadow: 3 }}>
-                <CardHeader
-                  avatar={
-                    <Avatar sx={{ bgcolor: red[500] }}>
-                      {model.title.charAt(0)}
-                    </Avatar>
-                  }
-                  title={model.title}
-                  subheader={model.overview}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary">
-                    {model.description}
-                  </Typography>
-                </CardContent>
-                <CardActions disableSpacing>
-                  <ExpandMoreIcon
-                    onClick={() => handleExpandClick(index)}
+            <Typography variant="h3" sx={{ fontWeight: 700 }}>
+              ⚡ EV Battery Optimization
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{ maxWidth: "800px", margin: "auto", mt: 2 }}
+            >
+              Optimizing electric vehicle batteries for efficiency, longevity,
+              and performance using AI-driven analytics.
+            </Typography>
+          </Box>
+          {/* Carousel */}
+          <Box
+            sx={{
+              padding: "20px",
+              maxWidth: "90%",
+              margin: "auto",
+              mt: "200px",
+              color: "#fff !important",
+            }}
+          >
+            <Swiper
+              slidesPerView={4}
+              spaceBetween={20}
+              navigation={true}
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              modules={[Navigation, Pagination, Autoplay]}
+              onSwiper={(swiper) => (swiperRef.current = swiper)}
+              style={{ paddingBottom: "60px" }}
+            >
+              {dataPoints.map((item, index) => (
+                <SwiperSlide key={index}>
+                  <DataCard
+                    {...item}
+                    onClick={() => handleCardClick(item)}
+                    open={expandedCard === item}
                     sx={{
-                      cursor: "pointer",
-                      transform: expanded[index]
-                        ? "rotate(180deg)"
-                        : "rotate(0)",
+                      background: "rgba(255, 255, 255, 0.15)", // Increase opacity for better contrast
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                      borderRadius: "10px",
+                      padding: "20px",
+                      color: "#fff !important", // Ensure white text
                       transition: "0.3s",
+                      "& *": { color: "#fff !important" }, // Force all child elements to be white
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                        boxShadow: "0px 4px 20px rgba(0,0,0,0.3)",
+                      },
                     }}
                   />
-                </CardActions>
-                <Collapse in={expanded[index]} timeout="auto" unmountOnExit>
-                  <CardContent>
-                    <Typography variant="h6">Benefits:</Typography>
-                    <List dense>
-                      {model.benefits.map((benefit, i) => (
-                        <ListItem key={i}>
-                          <ListItemText primary={`• ${benefit}`} />
-                        </ListItem>
-                      ))}
-                    </List>
-                    <Typography variant="h6">Use Cases:</Typography>
-                    <List dense>
-                      {model.useCases.map((useCase, i) => (
-                        <ListItem key={i}>
-                          <ListItemText primary={`• ${useCase}`} />
-                        </ListItem>
-                      ))}
-                    </List>
-                    <Typography variant="h6">Best For:</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {model.bestFor}
-                    </Typography>
-                  </CardContent>
-                </Collapse>
-              </Card>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </Box>
+        </Box>
+
+        {/* AI Model Cards Section */}
+        {/* 🔥 Section 2: AI Models */}
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            minHeight: "100vh",
+            backgroundImage: `url(${SectionTwo})`,
+            backgroundSize: "cover",
+            backgroundAttachment: "fixed",
+            backgroundPosition: "center",
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "rgba(0, 0, 0, 0.5)",
+              zIndex: 1,
+            }}
+          />
+          <Box
+            sx={{
+              position: "relative",
+              zIndex: 2,
+              color: "wheat",
+              textAlign: "center",
+              p: 4,
+            }}
+          >
+            <Typography variant="h3" sx={{ fontWeight: 700 }}>
+              AI Models for Analysis & Training
+            </Typography>
+            <Grid
+              container
+              spacing={4}
+              sx={{ maxWidth: "80%", margin: "auto" }}
+            >
+              {aiModels.map((model, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card
+                    sx={{
+                      maxWidth: 345,
+                      borderRadius: "16px",
+                      boxShadow: 3,
+                      background: "rgba(255, 255, 255, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      color: "#fff",
+                      "&:hover": { boxShadow: 6 },
+                    }}
+                  >
+                    <CardHeader
+                      avatar={
+                        <Avatar sx={{ bgcolor: red[500] }}>
+                          {model.title.charAt(0)}
+                        </Avatar>
+                      }
+                      title={model.title}
+                      subheader={model.overview}
+                      sx={{ color: "wheat" }}
+                    />
+                    <Collapse in={expanded[index]} timeout="auto" unmountOnExit>
+                      <CardContent>
+                        <Typography variant="body2" sx={{ color: "wheat" }}>
+                          {model.description}
+                        </Typography>
+                      </CardContent>
+                    </Collapse>
+                    <CardActions disableSpacing>
+                      <ExpandMoreIcon
+                        onClick={() => handleExpandClick(index)}
+                        sx={{
+                          cursor: "pointer",
+                          transform: expanded[index]
+                            ? "rotate(180deg)"
+                            : "rotate(0)",
+                          transition: "0.3s",
+                        }}
+                      />
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Performance Metrics Section */}
-        <Box sx={{ textAlign: "center", mt: 6, mb: 6 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-            Model Performance Metrics
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Evaluate the accuracy and performance of AI models using these key
-            metrics.
-          </Typography>
+        {/* 🔥 Section 3: Model Performance Metrics */}
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            minHeight: "100vh",
+            backgroundImage: `url(${SectionThree})`,
+            backgroundSize: "cover",
+            backgroundAttachment: "fixed",
+            backgroundPosition: "center",
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              background: "rgba(0, 0, 0, 0.5)",
+              zIndex: 1,
+            }}
+          />
+          <Box
+            sx={{
+              position: "relative",
+              zIndex: 2,
+              color: "wheat",
+              textAlign: "center",
+              p: 4,
+            }}
+          >
+            <Typography variant="h3" sx={{ fontWeight: 700 }}>
+              Model Performance Metrics
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{ maxWidth: "800px", margin: "auto", mt: 2 }}
+            >
+              Evaluate model accuracy, efficiency, and reliability across
+              multiple performance benchmarks.
+            </Typography>
+            <Grid
+              container
+              spacing={4}
+              sx={{ maxWidth: "80%", margin: "auto" }}
+            >
+              {metrics.map((metric, index) => (
+                <Grid item xs={12} sm={4} key={index}>
+                  <Card
+                    sx={{
+                      borderRadius: "12px",
+                      boxShadow: 3,
+                      p: 3,
+                      textAlign: "center",
+                      background:
+                        "linear-gradient(135deg, #3f51b5 30%, #1e88e5 90%)",
+                      color: "#fff",
+                      cursor: "pointer",
+                      "&:hover": { boxShadow: 6 },
+                    }}
+                    onMouseEnter={(e) => handleMouseEnter(e, metric)}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {metric.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="rgba(255,255,255,0.8)"
+                      sx={{ mt: 1 }}
+                    >
+                      Hover to see details
+                    </Typography>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
 
-          <Grid container spacing={4} sx={{ maxWidth: "80%", margin: "auto" }}>
-            {[
-              {
-                title: "Mean Squared Error (MSE)",
-                description:
-                  "Measures the average squared difference between actual and predicted values.",
-              },
-              {
-                title: "Mean Absolute Error (MAE)",
-                description:
-                  "Calculates the average absolute difference between actual and predicted values.",
-              },
-              {
-                title: "R² Score",
-                description:
-                  "Indicates how well the model explains the variance in the data (closer to 1 is better).",
-              },
-            ].map((metric, index) => (
-              <Grid item xs={12} sm={4} key={index}>
-                <Card
-                  sx={{
-                    borderRadius: "12px",
-                    boxShadow: 3,
-                    p: 3,
-                    textAlign: "center",
+            {/* Modal Popup */}
+            <AnimatePresence>
+              {selectedMetric && (
+                <Modal
+                  open={Boolean(selectedMetric)}
+                  onClose={handleClose}
+                  BackdropProps={{
+                    sx: { backdropFilter: "blur(8px)" }, // Apply blur effect to background
                   }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {metric.title}
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    sx={{ fontWeight: 700, color: "primary.main", my: 1 }}
+                  <Box
+                    component={motion.div}
+                    initial={{ opacity: 0, scale: 0.3 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    sx={{
+                      position: "fixed", // Ensures it stays relative to the viewport
+                      top: "30%", // Move modal's top edge to the center
+                      left: "35%", // Move modal's left edge to the center
+                      transform: "translate(-50%, -50%)", // Adjust position correctly
+                      bgcolor: "white",
+                      p: 4,
+                      borderRadius: "16px",
+                      boxShadow: 24,
+                      textAlign: "center",
+                      width: "300px",
+                      minWidth: "300px",
+                    }}
                   >
-                    {metric.value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {metric.description}
-                  </Typography>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+                      {selectedMetric.title}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      {selectedMetric.description}
+                    </Typography>
+                  </Box>
+                </Modal>
+              )}
+            </AnimatePresence>
+          </Box>
         </Box>
-      </Box>{" "}
+      </Box>
     </>
   );
 }
